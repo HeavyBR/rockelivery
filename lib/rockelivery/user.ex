@@ -7,6 +7,8 @@ defmodule Rockelivery.User do
 
   @required_params [:age, :address, :cep, :cpf, :email, :password, :name]
 
+  @required_update_params @required_params -- [:password]
+
   @derive {Jason.Encoder, only: [:id, :age, :cpf, :address, :email]}
 
   schema "users" do
@@ -22,6 +24,28 @@ defmodule Rockelivery.User do
     timestamps()
   end
 
+  # changeset for update
+  def changeset(struct, params) do
+    struct
+    |> cast(params, @required_params)
+    |> validate_required(@required_update_params)
+    |> validate_length(:cpf, is: 11)
+    |> validate_length(:cep, is: 8)
+    |> validate_number(:age, greater_than_or_equal_to: 18)
+    |> validate_format(:email, ~r/@/)
+    |> unique_constraint([:email])
+    |> unique_constraint([:cpf])
+    |> handle_password(params)
+  end
+
+  def handle_password(changeset, params) do
+    case Map.get(params, :password) do
+      nil -> changeset
+      _value -> changeset |> validate_length(:password, min: 6) |> put_password_hash()
+    end
+  end
+
+  # changeset for create
   def changeset(params) do
     %__MODULE__{}
     |> cast(params, @required_params)
