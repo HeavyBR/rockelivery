@@ -8,10 +8,11 @@ defmodule Rockelivery.Order do
   @payment_methods [:money, :credit_card, :debit_card]
 
   @primary_key {:id, :binary_id, autogenerate: true}
+  @foreign_key_type :binary_id
 
   @required_params [:address, :comments, :payment_method, :user_id]
 
-  @derive {Jason.Encoder, only: @required_params ++ [:id]}
+  @derive {Jason.Encoder, only: @required_params ++ [:id, :items]}
 
   schema "orders" do
     field :address, :string
@@ -19,7 +20,6 @@ defmodule Rockelivery.Order do
     field :payment_method, Enum, values: @payment_methods
 
     # Relationships
-
     many_to_many :items, Item, join_through: "orders_items"
     belongs_to :user, User
 
